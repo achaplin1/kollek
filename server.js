@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 const bodyParser = require('body-parser');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = 3000;
@@ -10,18 +9,30 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const dbPath = path.join(__dirname, 'db.json');
-const cardsPath = path.join(__dirname, 'cards.json');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
-// Charger les cartes
-const allCards = JSON.parse(fs.readFileSync(cardsPath));
-
+// Rareté
 const rarityChances = {
   "commune": 0.7,
   "rare": 0.2,
   "épique": 0.08,
   "légendaire": 0.02
 };
+
+// Exemple de cartes en dur
+const allCards = [
+  { "id": 1, "name": "Dragon Bleu", "rarity": "légendaire" },
+  { "id": 2, "name": "Rat Géant", "rarity": "commune" },
+  { "id": 3, "name": "Mage des Ténèbres", "rarity": "épique" },
+  { "id": 4, "name": "Soldat", "rarity": "commune" },
+  { "id": 5, "name": "Gobelin", "rarity": "commune" },
+  { "id": 6, "name": "Archer Elfique", "rarity": "rare" },
+  { "id": 7, "name": "Golem de Fer", "rarity": "rare" },
+  { "id": 8, "name": "Phoenix", "rarity": "épique" }
+];
 
 function getRandomCard() {
   const rand = Math.random();
@@ -36,46 +47,70 @@ function getRandomCard() {
   return allCards[0];
 }
 
-function loadDb() {
-  return JSON.parse(fs.readFileSync(dbPath));
-}
-
-function saveDb(db) {
-  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-}
-
-app.post('/api/login', (req, res) => {
+// Création du joueur (si nouveau)
+app.post('/api/login', async (req, res) => {
   const { userId, username } = req.body;
-  const db = loadDb();
 
-  if (!db[userId]) {
-    db[userId] = {
-      username,
-      cards: []
-    };
+  try {
+    const existing = await pool.query('SELECT id FROM users WHERE id = $1', [userId]);
+
+    if (existing.rowCount === 0) {
+      await pool.query(
+        'INSERT INTO users (id, username, cards) VALUES ($1, $2, $3)',
+        [userId, username, JSON.stringify([])]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'DB error' });
   }
-
-  saveDb(db);
-  res.json({ success: true });
 });
 
-app.post('/api/open-booster', (req, res) => {
+// Ouvrir un booster
+app.post('/api/open-booster', async (req, res) => {
   const { userId } = req.body;
-  const db = loadDb();
-
-  if (!db[userId]) return res.status(404).json({ error: "User not found" });
-
   const booster = Array.from({ length: 5 }, getRandomCard);
-  db[userId].cards.push(...booster);
-  saveDb(db);
 
-  res.json(booster);
+  try {
+    const result = await pool.query('SELECT cards FROM users WHERE id = $1', [userId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Utilisateur introuvable' });
+    }
+
+    const currentCards = result.rows[0].cards || [];
+    const updatedCards = [...currentCards, ...booster];
+
+    await pool.query('UPDATE users SET cards = $1 WHERE id = $2', [
+      JSON.stringify(updatedCards),
+      userId
+    ]);
+
+    res.json(booster);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'DB error' });
+  }
 });
 
-app.get('/api/inventory/:userId', (req, res) => {
-  const db = loadDb();
-  const user = db[req.params.userId];
-  res.json(user ? user.cards : []);
+// Récupérer inventaire
+app.get('/api/inventory/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query('SELECT cards FROM users WHERE id = $1', [userId]);
+
+    if (result.rowCount === 0) {
+      return res.json([]);
+    }
+
+    res.json(result.rows[0].cards);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'DB error' });
+  }
 });
 
-app.listen(PORT, () => console.log(`Serveur sur http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Serveur PostgreSQL sur http://localhost:${PORT}`));

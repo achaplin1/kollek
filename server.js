@@ -16,7 +16,6 @@ const cardsPath = path.join(__dirname, 'cards.json');
 // Charger les cartes
 const allCards = JSON.parse(fs.readFileSync(cardsPath));
 
-// Rareté des cartes
 const rarityChances = {
   "commune": 0.7,
   "rare": 0.2,
@@ -45,29 +44,38 @@ function saveDb(db) {
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 }
 
+app.post('/api/login', (req, res) => {
+  const { userId, username } = req.body;
+  const db = loadDb();
+
+  if (!db[userId]) {
+    db[userId] = {
+      username,
+      cards: []
+    };
+  }
+
+  saveDb(db);
+  res.json({ success: true });
+});
+
 app.post('/api/open-booster', (req, res) => {
   const { userId } = req.body;
   const db = loadDb();
-  if (!db[userId]) db[userId] = [];
+
+  if (!db[userId]) return res.status(404).json({ error: "User not found" });
 
   const booster = Array.from({ length: 5 }, getRandomCard);
-  db[userId].push(...booster);
+  db[userId].cards.push(...booster);
   saveDb(db);
 
   res.json(booster);
 });
 
-app.post('/api/login', (req, res) => {
-  const { userId } = req.body;
-  const db = loadDb();
-  if (!db[userId]) db[userId] = [];
-  saveDb(db);
-  res.json({ success: true });
-});
-
 app.get('/api/inventory/:userId', (req, res) => {
   const db = loadDb();
-  res.json(db[req.params.userId] || []);
+  const user = db[req.params.userId];
+  res.json(user ? user.cards : []);
 });
 
 app.listen(PORT, () => console.log(`Serveur sur http://localhost:${PORT}`));

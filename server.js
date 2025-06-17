@@ -1,14 +1,15 @@
 const express = require('express');
-const fs = require('fs');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const bodyParser = require('body-parser');
+
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-const path = require('path');
 const dbPath = path.join(__dirname, 'db.json');
 const cardsPath = path.join(__dirname, 'cards.json');
 

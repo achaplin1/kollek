@@ -8,8 +8,9 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const dbPath = './backend/db.json';
-const cardsPath = './backend/cards.json';
+const dbPath = './db.json';
+const cardsPath = './cards.json';
+
 
 // Charger les cartes
 const allCards = JSON.parse(fs.readFileSync(cardsPath));

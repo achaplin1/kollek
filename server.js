@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -20,20 +19,24 @@ const sampleQuestions = [
 const rooms = {};
 
 io.on('connection', (socket) => {
-  socket.on('joinRoom', ({ room, name }) => {
+  socket.on('joinRoom', ({ room, name, avatar }) => {
     socket.join(room);
 
     if (!rooms[room]) {
-      rooms[room] = { players: [], answers: {}, index: 0 };
+      rooms[room] = { players: [], avatars: {}, answers: {}, index: 0 };
     }
 
     const roomData = rooms[room];
 
     if (!roomData.players.includes(name)) {
       roomData.players.push(name);
+      roomData.avatars[name] = avatar; // enregistre l'avatar ici
     }
 
-    io.to(room).emit('updatePlayers', roomData.players);
+    io.to(room).emit('updatePlayers', {
+      players: roomData.players,
+      avatars: roomData.avatars
+    });
   });
 
   socket.on('startGame', (room) => {
@@ -61,7 +64,9 @@ io.on('connection', (socket) => {
       if (roomData.index < sampleQuestions.length) {
         io.to(room).emit('nextQuestion', roomData.index);
       } else {
-        io.to(room).emit('gameOver', roomData.answers);
+        io.to(room).emit('gameOver', {
+          answers: roomData.answers
+        });
       }
     }
   });

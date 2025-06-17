@@ -1,0 +1,10 @@
+[
+  { "id": 1, "name": "Dragon Bleu", "rarity": "légendaire" },
+  { "id": 2, "name": "Rat Géant", "rarity": "commune" },
+  { "id": 3, "name": "Mage des Ténèbres", "rarity": "épique" },
+  { "id": 4, "name": "Soldat", "rarity": "commune" },
+  { "id": 5, "name": "Gobelin", "rarity": "commune" },
+  { "id": 6, "name": "Archer Elfique", "rarity": "rare" },
+  { "id": 7, "name": "Golem de Fer", "rarity": "rare" },
+  { "id": 8, "name": "Phoenix", "rarity": "épique" }
+]

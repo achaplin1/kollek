@@ -23,14 +23,19 @@ io.on('connection', (socket) => {
     socket.join(room);
 
     if (!rooms[room]) {
-      rooms[room] = { players: [], avatars: {}, answers: {}, index: 0 };
+      rooms[room] = {
+        players: [],
+        avatars: {},
+        answers: {},
+        index: 0
+      };
     }
 
     const roomData = rooms[room];
 
     if (!roomData.players.includes(name)) {
       roomData.players.push(name);
-      roomData.avatars[name] = avatar; // enregistre l'avatar ici
+      roomData.avatars[name] = avatar || null;
     }
 
     io.to(room).emit('updatePlayers', {
@@ -42,6 +47,7 @@ io.on('connection', (socket) => {
   socket.on('startGame', (room) => {
     const roomData = rooms[room];
     if (!roomData) return;
+
     roomData.index = 0;
     roomData.answers = {};
     io.to(room).emit('nextQuestion', roomData.index);
@@ -51,13 +57,15 @@ io.on('connection', (socket) => {
     const roomData = rooms[room];
     if (!roomData) return;
 
-    if (!roomData.answers[questionIndex]) {
+    // 👇 Toujours initialiser un tableau
+    if (!Array.isArray(roomData.answers[questionIndex])) {
       roomData.answers[questionIndex] = [];
     }
 
     roomData.answers[questionIndex].push(player);
 
-    const allAnswered = roomData.answers[questionIndex].length === roomData.players.length;
+    const allAnswered =
+      roomData.answers[questionIndex].length === roomData.players.length;
 
     if (allAnswered) {
       roomData.index++;
@@ -74,5 +82,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Serveur lancé sur le port ${PORT}`);
+  console.log(`Serveur démarré sur le port ${PORT}`);
 });

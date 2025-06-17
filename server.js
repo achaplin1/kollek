@@ -14,7 +14,6 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Rareté
 const rarityChances = {
   "commune": 0.7,
   "rare": 0.2,
@@ -22,7 +21,6 @@ const rarityChances = {
   "légendaire": 0.02
 };
 
-// Exemple de cartes en dur
 const allCards = [
   { "id": 1, "name": "Dragon Bleu", "rarity": "légendaire" },
   { "id": 2, "name": "Rat Géant", "rarity": "commune" },
@@ -47,14 +45,15 @@ function getRandomCard() {
   return allCards[0];
 }
 
-// Création du joueur (si nouveau)
 app.post('/api/login', async (req, res) => {
   const { userId, username } = req.body;
+  console.log('Connexion:', userId, username);
 
   try {
     const existing = await pool.query('SELECT id FROM users WHERE id = $1', [userId]);
 
     if (existing.rowCount === 0) {
+      console.log('Nouvel utilisateur, insertion...');
       await pool.query(
         'INSERT INTO users (id, username, cards) VALUES ($1, $2, $3)',
         [userId, username, JSON.stringify([])]
@@ -63,12 +62,11 @@ app.post('/api/login', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error('Erreur login:', err);
     res.status(500).json({ error: 'DB error' });
   }
 });
 
-// Ouvrir un booster
 app.post('/api/open-booster', async (req, res) => {
   const { userId } = req.body;
   const booster = Array.from({ length: 5 }, getRandomCard);
@@ -80,7 +78,7 @@ app.post('/api/open-booster', async (req, res) => {
       return res.status(404).json({ error: 'Utilisateur introuvable' });
     }
 
-    const currentCards = result.rows[0].cards || [];
+    const currentCards = Array.isArray(result.rows[0].cards) ? result.rows[0].cards : [];
     const updatedCards = [...currentCards, ...booster];
 
     await pool.query('UPDATE users SET cards = $1 WHERE id = $2', [
@@ -90,12 +88,11 @@ app.post('/api/open-booster', async (req, res) => {
 
     res.json(booster);
   } catch (err) {
-    console.error(err);
+    console.error('Erreur booster:', err);
     res.status(500).json({ error: 'DB error' });
   }
 });
 
-// Récupérer inventaire
 app.get('/api/inventory/:userId', async (req, res) => {
   const { userId } = req.params;
 
@@ -106,9 +103,12 @@ app.get('/api/inventory/:userId', async (req, res) => {
       return res.json([]);
     }
 
-    res.json(result.rows[0].cards);
+    const cards = result.rows[0].cards;
+    if (!Array.isArray(cards)) return res.json([]);
+
+    res.json(cards);
   } catch (err) {
-    console.error(err);
+    console.error('Erreur inventaire:', err);
     res.status(500).json({ error: 'DB error' });
   }
 });

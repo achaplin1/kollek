@@ -1,56 +1,16 @@
 [
-  {
-    "id": 1,
-    "name": "Nounou Crêpier",
-    "rarity": "rare",
-    "image": "https://kollek-production.up.railway.app/cartes/crêpier.png"
-  },
-  {
-    "id": 2,
-    "name": "Nounou Cuisto",
-    "rarity": "épique",
-    "image": "https://kollek-production.up.railway.app/cartes/cuisto.png"
-  },
-  {
-    "id": 3,
-    "name": "Nounou Danseur",
-    "rarity": "rare",
-    "image": "https://kollek-production.up.railway.app/cartes/danseur.png"
-  },
-  {
-    "id": 4,
-    "name": "Nounou Du Texas",
-    "rarity": "épique",
-    "image": "https://kollek-production.up.railway.app/cartes/du texas.png"
-  },
-  {
-    "id": 5,
-    "name": "Nounou Jäger",
-    "rarity": "rare",
-    "image": "https://kollek-production.up.railway.app/cartes/jäger.png"
-  },
-  {
-    "id": 6,
-    "name": "Nounou Mécano",
-    "rarity": "commune",
-    "image": "https://kollek-production.up.railway.app/cartes/mécano.png"
-  },
-  {
-    "id": 7,
-    "name": "Nounou Pirate",
-    "rarity": "épique",
-    "image": "https://kollek-production.up.railway.app/cartes/pirate.png"
-  },
-  {
-    "id": 8,
-    "name": "Nounou Sorcier",
-    "rarity": "épique",
-    "image": "https://kollek-production.up.railway.app/cartes/sorcier.png"
-  },
-  {
-    "id": 9,
-    "name": "Nounou Titan",
-    "rarity": "épique",
-    "image": "https://kollek-production.up.railway.app/cartes/titan.png"
-  }
+  { "id": 1, "name": "Nounou Chanteur", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/chanteur.png" },
+  { "id": 2, "name": "Nounou Juno", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/juno.png" },
+  { "id": 3, "name": "Nounou Nunu", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/nunu.png" },
+  { "id": 4, "name": "Nounou Trio", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/trio.png" },
+  { "id": 5, "name": "Nounou Gamer", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/gamer.png" },
+  { "id": 6, "name": "Nounou Minou", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/ninou.png" },
+  { "id": 7, "name": "Nounou Dragmara", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/dragmara.png" },
+  { "id": 8, "name": "Nounou Titan", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/titan.png" },
+  { "id": 9, "name": "Nounou & Anna", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/anna.png" },
+
+  { "id": 10, "name": "Nounou Pirate", "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/pirate.png" },
+  { "id": 11, "name": "Nounou Du Texas", "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/du texas.png" },
+  { "id": 12, "name": "Nounou Sorcier", "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/sorcier.png" },
+  { "id": 13, "name": "Nounou Cuisto", "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/cuisto.png" }
 ]

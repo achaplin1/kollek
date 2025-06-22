@@ -3,36 +3,36 @@
     "id": 1,
     "name": "Nounou Du Texas",
     "rarity": "commune",
-    "image": "cartes/du texas.png"
+    "image": "https://kollek-production.up.railway.app/cartes/du texas.png"
   },
   {
     "id": 2,
     "name": "Nounou Cuisto",
     "rarity": "commune",
-    "image": "cartes/cuisto.png"
+    "image": "https://kollek-production.up.railway.app/cartes/cuisto.png"
   },
   {
     "id": 3,
     "name": "Nounou Mécano",
     "rarity": "commune",
-    "image": "cartes/mecano.png"
+    "image": "https://kollek-production.up.railway.app/cartes/mecano.png"
   },
   {
     "id": 4,
     "name": "Nounou Crêpier",
     "rarity": "commune",
-    "image": "cartes/crepier.png"
+    "image": "https://kollek-production.up.railway.app/cartes/crepier.png"
   },
   {
     "id": 5,
     "name": "Nounou Danseur",
     "rarity": "commune",
-    "image": "cartes/danseur.png"
+    "image": "https://kollek-production.up.railway.app/cartes/danseur.png"
   },
   {
     "id": 6,
     "name": "Nounou Sorcier",
     "rarity": "commune",
-    "image": "cartes/sorcier.png"
+    "image": "https://kollek-production.up.railway.app/cartes/sorcier.png"
   }
 ]

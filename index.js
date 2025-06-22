@@ -41,24 +41,32 @@ client.on('interactionCreate', async interaction => {
   const userId = interaction.user.id;
   const now = Date.now();
   const deuxHeures = 2 * 60 * 60 * 1000;
+  const testUserId = '647838210612920338'; // mwunh
 
   try {
+    await interaction.deferReply();
+
     const res = await pool.query('SELECT last_draw FROM pioches WHERE user_id = $1', [userId]);
     const lastDraw = res.rows[0]?.last_draw || 0;
     const diff = now - lastDraw;
 
-    if (diff < deuxHeures) {
+    if (userId !== testUserId && diff < deuxHeures) {
       const minutesRestantes = Math.ceil((deuxHeures - diff) / (60 * 1000));
-      await interaction.reply({ content: `⏳ Tu dois encore attendre ${minutesRestantes} min avant de repiocher.`, ephemeral: true });
-    } else {
-      const carte = cartes[Math.floor(Math.random() * cartes.length)];
-      await pool.query('INSERT INTO collection (user_id, card_id) VALUES ($1, $2)', [userId, carte.id]);
-      await pool.query('INSERT INTO pioches (user_id, last_draw) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_draw = EXCLUDED.last_draw', [userId, now]);
-      await interaction.reply({ content: `🎴 Tu as tiré : **${carte.name}** (${carte.rarity})`, files: [carte.image] });
+      await interaction.editReply({ content: `⏳ Tu dois encore attendre ${minutesRestantes} min avant de repiocher.` });
+      return;
     }
+
+    const carte = cartes[Math.floor(Math.random() * cartes.length)];
+    await pool.query('INSERT INTO collection (user_id, card_id) VALUES ($1, $2)', [userId, carte.id]);
+    await pool.query('INSERT INTO pioches (user_id, last_draw) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_draw = EXCLUDED.last_draw', [userId, now]);
+
+    await interaction.editReply({
+      content: `🎴 Tu as tiré : **${carte.name}** (${carte.rarity})`,
+      files: [carte.image]
+    });
   } catch (err) {
-    console.error(err);
-    interaction.reply({ content: '❌ Une erreur est survenue.', ephemeral: true });
+    console.error("Erreur durant la pioche :", err);
+    await interaction.editReply({ content: '❌ Une erreur est survenue.' });
   }
 });
 

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Rat G\u00e9ant",
+    "rarity": "commune",
+    "image": "https://tonsite.com/images/1.png"
+  },
+  {
+    "id": 2,
+    "name": "Licorne de Feu",
+    "rarity": "rare",
+    "image": "https://tonsite.com/images/2.png"
+  },
+  {
+    "id": 3,
+    "name": "Dragon Noir",
+    "rarity": "l\u00e9gendaire",
+    "image": "https://tonsite.com/images/3.png"
+  }
+]

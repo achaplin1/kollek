@@ -32,6 +32,12 @@ client.once('ready', async () => {
   await pool.query(`CREATE TABLE IF NOT EXISTS pioches   (user_id TEXT PRIMARY KEY, last_draw BIGINT);`);
   await pool.query(`CREATE TABLE IF NOT EXISTS collection(user_id TEXT, card_id  INTEGER);`);
 });
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS koins (
+    user_id TEXT PRIMARY KEY,
+    amount INTEGER DEFAULT 0
+  );
+`);
 
 /* ─────────────────────  LOGIQUE DE PIOCHE  ─────────────────── */
 const rarityChances = {        // 55 % / 35 % / 9 % / 1 %

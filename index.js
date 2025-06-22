@@ -79,13 +79,15 @@ client.on('interactionCreate', async interaction => {
     };
 
     const embed = {
-      title: '🎴 Carte tirée',
-      description: `**${carte.name}**\nRareté : *${carte.rarity}*`,
-      color: rarityColors[carte.rarity] || 0xffffff,
-      image: { url: carte.image }
-    };
+  title: '🎴 Carte tirée',
+  description: `**${carte.name}**\nRareté : *${carte.rarity}*`,
+  color: rarityColors[carte.rarity] || 0xffffff
+};
 
-    await interaction.editReply({ embeds: [embed] });
+await interaction.editReply({
+  embeds: [embed],
+  files: [carte.image]
+});
 
   } catch (err) {
     console.error("❌ Erreur durant la pioche :", err);

@@ -27,11 +27,7 @@ client.once('ready', async () => {
   console.log(`🤖 Connecté en tant que ${client.user.tag}`);
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   const appId = (await rest.get(Routes.oauth2CurrentApplication())).id;
-  await rest.put(
-  Routes.applicationGuildCommands(appId, '1370459190253977630'),
-  { body: commands }
-);
-
+  await rest.put(Routes.applicationCommands(appId), { body: commands });
   console.log('✅ Commandes enregistrées');
 
   await pool.query(`CREATE TABLE IF NOT EXISTS pioches (user_id TEXT PRIMARY KEY, last_draw BIGINT);`);
@@ -40,10 +36,10 @@ client.once('ready', async () => {
 });
 
 const rarityChances = {
-  commune:     0.45,   // 45 %
-  rare:        0.35,   // 35 %
-  épique:      0.19,   // 19 %
-  légendaire:  0.01    // 1 %
+  commune:     0.45,
+  rare:        0.35,
+  épique:      0.19,
+  légendaire:  0.01
 };
 const rarityColors = {
   commune: 0xA0A0A0,
@@ -124,7 +120,7 @@ client.on('interactionCreate', async inter => {
         return `• **${carte.name}** × ${count} (*${carte.rarity}*)`;
       });
 
-      const chunks = lignes.slice(0, 20); // max 20 lignes pour ne pas surcharger l'embed
+      const chunks = lignes.slice(0, 20);
       const embed = {
         title: `📘 Collection de ${inter.user.username}`,
         description: chunks.join('\n'),
@@ -148,22 +144,26 @@ client.on('interactionCreate', async inter => {
       }
 
       await pool.query('UPDATE koins SET amount = amount - $2 WHERE user_id = $1', [uid, boosterCost]);
-      const tirages = [];
+
+      await inter.editReply(`📦 Tu ouvres un booster...`);
 
       for (let i = 0; i < 3; i++) {
-        const r = tirerRareté();
-        const candidates = cartes.filter(c => c.rarity === r);
-        const card = candidates[Math.floor(Math.random() * candidates.length)];
-        tirages.push(card);
-        await pool.query('INSERT INTO collection(user_id, card_id) VALUES ($1,$2)', [uid, card.id]);
-      }
+        await new Promise(r => setTimeout(r, 1000)); // pause 1s
 
-      const embed = {
-        title: '📦 Booster ouvert !',
-        description: tirages.map(c => `• **${c.name}** (*${c.rarity}*)`).join('\n'),
-        color: 0xf1c40f
-      };
-      await inter.editReply({ embeds: [embed], files: tirages.map(c => c.image) });
+        const rareté = tirerRareté();
+        const poolCartes = cartes.filter(c => c.rarity === rareté);
+        const carte = poolCartes[Math.floor(Math.random() * poolCartes.length)];
+
+        await pool.query('INSERT INTO collection(user_id, card_id) VALUES ($1, $2)', [uid, carte.id]);
+
+        const embed = {
+          title: `🎴 Carte ${i + 1} tirée`,
+          description: `**${carte.name}**\nRareté : *${carte.rarity}*`,
+          color: rarityColors[carte.rarity] ?? 0xffffff
+        };
+
+        await inter.followUp({ embeds: [embed], files: [carte.image] });
+      }
     } catch (err) {
       console.error(err);
       await inter.editReply("❌ Une erreur est survenue pendant l'ouverture du booster.");

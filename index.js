@@ -39,7 +39,12 @@ client.once('ready', async () => {
   await pool.query(`CREATE TABLE IF NOT EXISTS koins (user_id TEXT PRIMARY KEY, amount INTEGER DEFAULT 0);`);
 });
 
-const rarityChances = { commune: 0.55, rare: 0.35, épique: 0.09, légendaire: 0.01 };
+const rarityChances = {
+  commune:     0.45,   // 45 %
+  rare:        0.35,   // 35 %
+  épique:      0.19,   // 19 %
+  légendaire:  0.01    // 1 %
+};
 const rarityColors = {
   commune: 0xA0A0A0,
   rare: 0x007BFF,

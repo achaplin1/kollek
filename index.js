@@ -124,7 +124,7 @@ client.on('interactionCreate', async inter => {
       await inter.editReply({ embeds: [embed] });
     } catch (err) {
       console.error(err);
-      await inter.editReply('❌ Impossible d'afficher la collection.');
+      await inter.editReply('❌ Impossible d\afficher la collection.');
     }
   }
 

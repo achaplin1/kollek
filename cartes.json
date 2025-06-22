@@ -1,5 +1,5 @@
 [
-  { "id": 1, "name": "Nounou Chanteur", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/chanteur.png" },
+  { "id": 1, "name": "Nounou Chanteur", "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/chanteur.png" },
   { "id": 2, "name": "Nounou Juno", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/juno.png" },
   { "id": 3, "name": "Nounou Nunu", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/nunu.png" },
   { "id": 4, "name": "Nounou Trio", "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/trio.png" },

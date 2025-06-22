@@ -5,7 +5,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
-// === Express Server to serve /cartes ===
+// === Serveur Express pour /cartes ===
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use('/cartes', express.static(path.join(__dirname, 'cartes')));
@@ -71,10 +71,22 @@ client.on('interactionCreate', async interaction => {
     await pool.query('INSERT INTO collection (user_id, card_id) VALUES ($1, $2)', [userId, carte.id]);
     await pool.query('INSERT INTO pioches (user_id, last_draw) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_draw = EXCLUDED.last_draw', [userId, now]);
 
-    await interaction.editReply({
-      content: `🎴 Tu as tiré : **${carte.name}** (${carte.rarity})`,
-      files: [carte.image]
-    });
+    const rarityColors = {
+      "commune": 0xA0A0A0,
+      "rare": 0x007BFF,
+      "épique": 0x9B59B6,
+      "légendaire": 0xFFD700
+    };
+
+    const embed = {
+      title: '🎴 Carte tirée',
+      description: `**${carte.name}**\nRareté : *${carte.rarity}*`,
+      color: rarityColors[carte.rarity] || 0xffffff,
+      image: { url: carte.image }
+    };
+
+    await interaction.editReply({ embeds: [embed] });
+
   } catch (err) {
     console.error("❌ Erreur durant la pioche :", err);
     await interaction.editReply({ content: '❌ Une erreur est survenue.' });

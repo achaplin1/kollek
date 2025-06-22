@@ -27,7 +27,11 @@ client.once('ready', async () => {
   console.log(`🤖 Connecté en tant que ${client.user.tag}`);
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   const appId = (await rest.get(Routes.oauth2CurrentApplication())).id;
-  await rest.put(Routes.applicationCommands(appId), { body: commands });
+  await rest.put(
+  Routes.applicationGuildCommands(appId, '1370459190253977630'),
+  { body: commands }
+);
+
   console.log('✅ Commandes enregistrées');
 
   await pool.query(`CREATE TABLE IF NOT EXISTS pioches (user_id TEXT PRIMARY KEY, last_draw BIGINT);`);

@@ -1,8 +1,19 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 const { Pool } = require('pg');
+const express = require('express');
+const path = require('path');
 const fs = require('fs');
 
+// === Express Server to serve /cartes ===
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.use('/cartes', express.static(path.join(__dirname, 'cartes')));
+app.listen(PORT, () => {
+  console.log(`✅ Serveur express en ligne sur le port ${PORT}`);
+});
+
+// === Discord Bot ===
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const cartes = JSON.parse(fs.readFileSync('./cartes.json', 'utf8'));
@@ -14,11 +25,11 @@ const commands = [
 ].map(cmd => cmd.toJSON());
 
 client.once('ready', async () => {
-  console.log(`Connecté en tant que ${client.user.tag}`);
+  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   const appId = (await rest.get(Routes.oauth2CurrentApplication())).id;
   await rest.put(Routes.applicationCommands(appId), { body: commands });
-  console.log('Commandes enregistrées.');
+  console.log('✅ Commandes enregistrées.');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS pioches (
@@ -65,7 +76,7 @@ client.on('interactionCreate', async interaction => {
       files: [carte.image]
     });
   } catch (err) {
-    console.error("Erreur durant la pioche :", err);
+    console.error("❌ Erreur durant la pioche :", err);
     await interaction.editReply({ content: '❌ Une erreur est survenue.' });
   }
 });

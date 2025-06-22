@@ -124,7 +124,7 @@ client.on('interactionCreate', async inter => {
       await inter.editReply({ embeds: [embed] });
     } catch (err) {
       console.error(err);
-      await inter.editReply('❌ Impossible d\afficher la collection.');
+      await inter.editReply("❌ Impossible d'afficher la collection.");
     }
   }
 
@@ -157,7 +157,7 @@ client.on('interactionCreate', async inter => {
       await inter.editReply({ embeds: [embed], files: tirages.map(c => c.image) });
     } catch (err) {
       console.error(err);
-      await inter.editReply('❌ Une erreur est survenue pendant l'ouverture du booster.');
+      await inter.editReply("❌ Une erreur est survenue pendant l'ouverture du booster.");
     }
   }
 });

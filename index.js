@@ -149,43 +149,52 @@ client.on('interactionCreate', async (inter) => {
     } catch(e){ console.error(e); return inter.reply({content:'❌ Erreur dé',ephemeral:true}); }
   }
 
-  if (inter.commandName === 'pioche') {
-    const now = Date.now(), wait = 90*60*1000;
-    try {
-      await inter.deferReply();
-      const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id=$1', [uid]);
-      const last = rows[0]?.last_draw ?? 0;
-      if (now - last < wait) {
-        const m = Math.ceil((wait - (now - last)) / 60000);
-        return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.\n💡 N'oublie pas : /bonus chaque jour et /dé toutes les 4h !
-`);
-      }
+if (inter.commandName === 'pioche') {
+  const now = Date.now(), wait = 90 * 60 * 1000;
+  try {
+    await inter.deferReply();
+    const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id=$1', [uid]);
+    const last = rows[0]?.last_draw ?? 0;
+    if (now - last < wait) {
+      const m = Math.ceil((wait - (now - last)) / 60000);
+      return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.\n💡 N'oublie pas : /bonus chaque jour et /dé toutes les 4h !`);
+    }
 
-      const rar = tirerRareté();
-      const liste = cartes.filter(c => c.rarity === rar);
-      const carte = liste[Math.floor(Math.random()*liste.length)];
+    const rar = tirerRareté();
+    const liste = cartes.filter(c => c.rarity === rar);
+    const carte = liste[Math.floor(Math.random() * liste.length)];
 
-      const dup = await pool.query('SELECT 1 FROM collection WHERE user_id=$1 AND card_id=$2', [uid, carte.id]);
-      let msg  = rarityReactions[rar][Math.floor(Math.random()*4)];
-      if (dup.rowCount){
-        const g = rarityKoins[rar];
-        msg += `\n💰 Carte en double ! +${g} koins`;
-        await pool.query(`INSERT INTO koins(user_id,amount) VALUES ($1,$2)
-                          ON CONFLICT(user_id) DO UPDATE SET amount=koins.amount+$2`, [uid, g]);
-      }
+    const dup = await pool.query('SELECT 1 FROM collection WHERE user_id=$1 AND card_id=$2', [uid, carte.id]);
+    let msg = rarityReactions[rar][Math.floor(Math.random() * 4)];
+    if (dup.rowCount) {
+      const g = rarityKoins[rar];
+      msg += `\n💰 Carte en double ! +${g} koins`;
+      await pool.query(
+        `INSERT INTO koins(user_id,amount) VALUES ($1,$2)
+         ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + $2`,
+        [uid, g]
+      );
+    }
 
-      await pool.query('INSERT INTO collection(user_id,card_id)VALUES($1,$2)',[uid,carte.id]);
-      await pool.query(`INSERT INTO pioches(user_id,last_draw) VALUES ($1,$2)
-                        ON CONFLICT(user_id) DO UPDATE SET last_draw=$2`,[uid,now]);
+    await pool.query('INSERT INTO collection(user_id,card_id) VALUES ($1,$2)', [uid, carte.id]);
+    await pool.query(
+      `INSERT INTO pioches(user_id,last_draw) VALUES ($1,$2)
+       ON CONFLICT(user_id) DO UPDATE SET last_draw = $2`,
+      [uid, now]
+    );
 
-      const embed = {
-        title: `${rarityEmojis[rar]} ${carte.name}`,
-        description: `${msg}\nRareté : *${rar}*`,
-        color: rarityColors[rar]
-      };
-      return inter.editReply({ embeds:[embed], files:[carte.image] });
-    } catch(e){ console.error(e); return inter.editReply('❌ Erreur pioche'); }
+    const embed = {
+      title: `#${carte.id} • ${rarityEmojis[rar]} ${carte.name}`,
+      description: `${msg}\nRareté : *${rar}*`,
+      color: rarityColors[rar]
+    };
+    return inter.editReply({ embeds: [embed], files: [carte.image] });
+
+  } catch (e) {
+    console.error(e);
+    return inter.editReply('❌ Erreur pioche');
   }
+}
 
 // -------- /booster --------
 if (inter.commandName === 'booster') {
@@ -197,7 +206,7 @@ if (inter.commandName === 'booster') {
     if (solde < boosterCost)
       return inter.editReply(`💸 Il faut ${boosterCost} koins (tu en as ${solde}).\n💡 Tu peux faire /bonus chaque jour et /dé toutes les 4h pour en gagner !`);
 
-    await pool.query('UPDATE koins SET amount=amount-$2 WHERE user_id=$1', [uid, boosterCost]);
+    await pool.query('UPDATE koins SET amount = amount - $2 WHERE user_id = $1', [uid, boosterCost]);
 
     const tirages = [];
 
@@ -224,7 +233,6 @@ if (inter.commandName === 'booster') {
       }
 
       await pool.query('INSERT INTO collection(user_id, card_id) VALUES ($1, $2)', [uid, carte.id]);
-
       tirages.push({ carte, doublon });
     }
 
@@ -232,7 +240,7 @@ if (inter.commandName === 'booster') {
 
     for (const { carte, doublon } of tirages) {
       const embed = {
-        title: `${rarityEmojis[carte.rarity]} ${carte.name}`,
+        title: `#${carte.id} • ${rarityEmojis[carte.rarity]} ${carte.name}`,
         color: rarityColors[carte.rarity],
         description: `Rareté : *${carte.rarity}*` + (doublon ? `\n💰 Carte en double ! +${doublon} koins` : "")
       };
@@ -258,10 +266,11 @@ if (inter.commandName === 'booster') {
       const map = {};
       col.rows.forEach(r => map[r.card_id] = (map[r.card_id]||0)+1);
 
-      const lignes = Object.entries(map).map(([id,n])=>{
-        const c=cartes.find(x=>x.id==id);
-        return `• **${c.name}** × ${n} (*${c.rarity}*)`;
-      });
+     const lignes = Object.entries(map).map(([id, n]) => {
+      const c = cartes.find(x => x.id === Number(id));
+  return `#${c.id} • **${c.name}** × ${n} (*${c.rarity}*)`;
+});
+
 
       const embeds=[];
       for(let i=0;i<lignes.length;i+=10){

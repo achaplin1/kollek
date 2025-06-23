@@ -31,6 +31,12 @@ const commands = [
   new SlashCommandBuilder().setName('kollek').setDescription('Affiche ta collection'),
   new SlashCommandBuilder().setName('booster').setDescription('Ouvre un booster de 3 cartes (10 koins)'),
   new SlashCommandBuilder().setName('bonus').setDescription('Réclame 5 koins toutes les 24 h'),
+  new SlashCommandBuilder()
+  .setName('voir')
+  .setDescription("Voir une carte de ta collection")
+  .addIntegerOption(opt =>
+    opt.setName('id').setDescription("ID de la carte").setRequired(true)
+  ),
   new SlashCommandBuilder().setName('dé').setDescription('Lance un dé toutes les 4 h pour gagner des koins')
 ].map(c => c.toJSON());
 
@@ -96,58 +102,65 @@ client.on('interactionCreate', async (inter) => {
   if (!inter.isChatInputCommand()) return;
   const uid = inter.user.id;
 
-  if (inter.commandName === 'bonus') {
-    const now = Date.now(), oneDay = 86_400_000;
-    try {
-      const { rows } = await pool.query('SELECT last_claim FROM bonus WHERE user_id=$1', [uid]);
-      const last = rows[0]?.last_claim ?? 0;
-      if (now - last < oneDay) {
-        const h = Math.ceil((oneDay - (now - last)) / 3_600_000);
-        return inter.reply({ content: `⏳ Reviens dans ${h} h pour ton bonus.`, ephemeral: true });
-      }
+ if (inter.commandName === 'bonus') {
+  const now = Date.now(), oneDay = 86_400_000;
+  try {
+    const { rows } = await pool.query('SELECT last_claim FROM bonus WHERE user_id=$1', [uid]);
+    const last = rows[0]?.last_claim ?? 0;
+    if (now - last < oneDay) {
+      const h = Math.ceil((oneDay - (now - last)) / 3_600_000);
+      return inter.reply(`⏳ Reviens dans ${h} h pour ton bonus.\n💡 Tu peux aussi faire /dé toutes les 4h !`);
+    }
 
-      await pool.query(`
-        INSERT INTO koins(user_id,amount) VALUES ($1,5)
-        ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + 5`, [uid]);
+    await pool.query(`
+      INSERT INTO koins(user_id,amount) VALUES ($1,5)
+      ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + 5`, [uid]);
 
-      await pool.query(`
-        INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
-        ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`, [uid, now]);
+    await pool.query(`
+      INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
+      ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`, [uid, now]);
 
-      return inter.reply({ content: '🎁 + 5 koins !', ephemeral: true });
-    } catch (e) { console.error(e); return inter.reply({ content:'❌ Erreur bonus', ephemeral:true }); }
+    return inter.reply(`🎁 ${inter.user.username} a reçu **+5 koins** !`);
+  } catch (e) {
+    console.error(e);
+    return inter.reply('❌ Erreur bonus');
   }
+}
 
-  if (inter.commandName === 'dé') {
-    const now = Date.now(), wait = 14_400_000;
-    try {
-      const { rows } = await pool.query('SELECT last_roll FROM rolls WHERE user_id=$1', [uid]);
-      const last = rows[0]?.last_roll ?? 0;
-      if (now - last < wait) {
-        const m = Math.ceil((wait - (now - last)) / 60000);
-        return inter.reply({ content:`⏳ Reviens dans ${m} min pour relancer le dé.`, ephemeral:true });
-      }
+if (inter.commandName === 'dé') {
+  const now = Date.now(), wait = 14_400_000;
+  try {
+    const { rows } = await pool.query('SELECT last_roll FROM rolls WHERE user_id=$1', [uid]);
+    const last = rows[0]?.last_roll ?? 0;
+    if (now - last < wait) {
+      const m = Math.ceil((wait - (now - last)) / 60000);
+      return inter.reply(`⏳ Reviens dans ${m} min pour relancer le dé.\n💡 N'oublie pas de faire /bonus chaque jour !`);
+    }
 
-      const roll = Math.floor(Math.random()*6)+1;
-      const gain = roll * 2;
+    const roll = Math.floor(Math.random() * 6) + 1;
+    const gain = roll * 2;
 
-      await pool.query(
-        `INSERT INTO koins(user_id, amount)
-         VALUES ($1, $2)
-         ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + $2`,
-        [uid, gain]
-      );
+    await pool.query(
+      `INSERT INTO koins(user_id, amount)
+       VALUES ($1, $2)
+       ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + $2`,
+      [uid, gain]
+    );
 
-      await pool.query(
-        `INSERT INTO rolls(user_id, last_roll)
-         VALUES ($1, $2)
-         ON CONFLICT(user_id) DO UPDATE SET last_roll = $2`,
-        [uid, now]
-      );
+    await pool.query(
+      `INSERT INTO rolls(user_id, last_roll)
+       VALUES ($1, $2)
+       ON CONFLICT(user_id) DO UPDATE SET last_roll = $2`,
+      [uid, now]
+    );
 
-      return inter.reply({ content:`🎲 ${roll} ! Tu gagnes **${gain} koins**.`, ephemeral:true });
-    } catch(e){ console.error(e); return inter.reply({content:'❌ Erreur dé',ephemeral:true}); }
+    return inter.reply(`🎲 ${inter.user.username} a lancé un **${roll}** et gagne **${gain} koins** !`);
+  } catch (e) {
+    console.error(e);
+    return inter.reply('❌ Erreur dé');
   }
+}
+
 
 if (inter.commandName === 'pioche') {
   const now = Date.now(), wait = 90 * 60 * 1000;
@@ -193,6 +206,64 @@ if (inter.commandName === 'pioche') {
   } catch (e) {
     console.error(e);
     return inter.editReply('❌ Erreur pioche');
+  }
+}
+
+if (inter.commandName === 'voir') {
+  try {
+    await inter.deferReply();
+
+    const wantedId = inter.options.getInteger('id');
+    const col = await pool.query('SELECT card_id FROM collection WHERE user_id = $1', [uid]);
+    if (!col.rowCount) return inter.editReply("😢 Tu n'as aucune carte.");
+
+    const owned = col.rows.map(r => Number(r.card_id));
+    const uniques = [...new Set(owned)];
+
+    if (!uniques.includes(wantedId))
+      return inter.editReply("❌ Tu ne possèdes pas cette carte.");
+
+    const sorted = uniques.sort((a, b) => a - b);
+    let index = sorted.indexOf(wantedId);
+
+    const sendEmbed = async () => {
+      const cardId = sorted[index];
+      const count = owned.filter(id => id === cardId).length;
+      const card = cartes.find(c => c.id === cardId);
+
+      const embed = {
+        title: `#${card.id} • ${rarityEmojis[card.rarity]} ${card.name}`,
+        description: `Quantité : **${count}**\nRareté : *${card.rarity}*`,
+        image: { url: card.image },
+        color: rarityColors[card.rarity],
+        footer: { text: `Carte ${index + 1} / ${sorted.length}` }
+      };
+
+      return embed;
+    };
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('prev').setLabel('◀️').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('next').setLabel('▶️').setStyle(ButtonStyle.Secondary)
+    );
+
+    const msg = await inter.editReply({ embeds: [await sendEmbed()], components: [row] });
+
+    const collector = msg.createMessageComponentCollector({ time: 60_000 });
+    collector.on('collect', async i => {
+      if (i.user.id !== uid)
+        return i.reply({ content: "Pas ton menu !", ephemeral: true });
+
+      index = i.customId === 'next'
+        ? (index + 1) % sorted.length
+        : (index - 1 + sorted.length) % sorted.length;
+
+      await i.update({ embeds: [await sendEmbed()] });
+    });
+
+  } catch (e) {
+    console.error(e);
+    return inter.editReply("❌ Erreur lors de l'affichage de la carte.");
   }
 }
 

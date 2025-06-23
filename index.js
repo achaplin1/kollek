@@ -1,4 +1,4 @@
-/daily mais plutot /bonus en partant de ce code // ────────────────────────── CONFIGURATION ──────────────────────────
+// ────────────────────────── CONFIGURATION ──────────────────────────
 require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } = require('discord.js');
 const { Pool } = require('pg');

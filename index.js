@@ -85,11 +85,14 @@ client.on('interactionCreate', async (inter) => {
         return inter.reply({ content: `⏳ Reviens dans ${h} h pour ton bonus.`, ephemeral: true });
       }
 
-      await pool.query(`
-        INSERT INTO koins(user_id,amount) VALUES ($1,5)
-        ON CONFLICT(user_id) DO UPDATE SET amount=koins.amount+5;
-        INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
-        ON CONFLICT(user_id) DO UPDATE SET last_claim=$2;`, [uid, now]);
+     await pool.query(`
+  INSERT INTO koins(user_id,amount) VALUES ($1,5)
+  ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + 5`, [uid]);
+
+await pool.query(`
+  INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
+  ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`, [uid, now]);
+      
       return inter.reply({ content: '🎁 + 5 koins !', ephemeral: true });
     } catch (e) { console.error(e); return inter.reply({ content:'❌ Erreur bonus', ephemeral:true }); }
   }

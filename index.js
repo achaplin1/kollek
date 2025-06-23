@@ -68,7 +68,6 @@ client.once('ready', async () => {
 client.on('interactionCreate', async inter => {
   if (!inter.isChatInputCommand()) return;
   const uid = inter.user.id;
-  const testUserId = '647838210612920338';
 
   if (inter.commandName === 'pioche') {
     const now = Date.now();
@@ -77,10 +76,11 @@ client.on('interactionCreate', async inter => {
       await inter.deferReply();
       const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id = $1', [uid]);
       const lastDraw = rows[0]?.last_draw || 0;
-      if (uid !== testUserId && now - lastDraw < waitTwoH) {
-        const m = Math.ceil((waitTwoH - (now - lastDraw)) / 60000);
-        return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.`);
-      }
+if (now - lastDraw < waitTwoH) {
+  const m = Math.ceil((waitTwoH - (now - lastDraw)) / 60000);
+  return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.`);
+}
+
 
       const rareté = tirerRareté();
       const poolCartes = cartes.filter(c => c.rarity === rareté);

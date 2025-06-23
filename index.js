@@ -39,7 +39,7 @@ const rarityReactions = {
   épique: ['Wouah !', 'Trop classe !', 'Incroyable tirage !', 'Magnifique !'],
   légendaire: ['LÉGENDAIRE !!!!', 'LA CARTE ULTIME !', 'C’est un MIRACLE !', 'Tu forces le destin !']
 };
-const boosterCost = 25;
+const boosterCost = 10;
 
 function tirerRareté() {
   const r = Math.random();
@@ -175,7 +175,7 @@ if (now - lastDraw < waitTwoH) {
       },
       {
         name: '📦 /booster',
-        value: `Ouvre un booster de **3 cartes** pour **25 koins**.`
+        value: `Ouvre un booster de **3 cartes** pour **10 koins**.`
       },
       {
         name: '📘 /kollek',

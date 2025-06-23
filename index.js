@@ -40,6 +40,32 @@ const rarityColors  = { commune: 0xCCCCCC, rare: 0x3498db, épique: 0x9b59b6, l�
 const rarityEmojis  = { commune: '⚪',     rare: '🔵',     épique: '🟣',       légendaire: '🟡' };
 const rarityKoins   = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
 const boosterCost   = 10;
+const rarityReactions = {
+  commune: [
+    "Une carte toute simple !",
+    "Rien d’extra, mais c’est toujours ça.",
+    "Une carte banale.",
+    "Commune… comme ton humour 😏"
+  ],
+  rare: [
+    "Pas mal, une rare !",
+    "Une trouvaille sympa !",
+    "Ça commence à devenir intéressant.",
+    "Une carte rare, GG !"
+  ],
+  épique: [
+    "Wow, épique !",
+    "Une sacrée carte !",
+    "La chance te sourit.",
+    "On touche au légendaire… presque."
+  ],
+  légendaire: [
+    "🌟 LÉGENDAIRE !!",
+    "Tu viens de choper une pépite !",
+    "Incroyable tirage !",
+    "Celle-là va faire des jaloux."
+  ]
+};
 
 // ────────────────────────── OUTILS ──────────────────────────
 function tirerRareté() {
@@ -61,7 +87,6 @@ client.once('ready', async () => {
   await rest.put(Routes.applicationCommands(appId), { body: commands });
   console.log('✅ Slash commands enregistrées');
 
-  // Tables
   await pool.query(`CREATE TABLE IF NOT EXISTS pioches  (user_id TEXT PRIMARY KEY, last_draw  BIGINT);`);
   await pool.query(`CREATE TABLE IF NOT EXISTS bonus    (user_id TEXT PRIMARY KEY, last_claim BIGINT);`);
   await pool.query(`CREATE TABLE IF NOT EXISTS rolls    (user_id TEXT PRIMARY KEY, last_roll  BIGINT);`);
@@ -74,7 +99,6 @@ client.on('interactionCreate', async (inter) => {
   if (!inter.isChatInputCommand()) return;
   const uid = inter.user.id;
 
-  // -------- /bonus --------
   if (inter.commandName === 'bonus') {
     const now = Date.now(), oneDay = 86_400_000;
     try {
@@ -85,21 +109,20 @@ client.on('interactionCreate', async (inter) => {
         return inter.reply({ content: `⏳ Reviens dans ${h} h pour ton bonus.`, ephemeral: true });
       }
 
-     await pool.query(`
-  INSERT INTO koins(user_id,amount) VALUES ($1,5)
-  ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + 5`, [uid]);
+      await pool.query(`
+        INSERT INTO koins(user_id,amount) VALUES ($1,5)
+        ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + 5`, [uid]);
 
-await pool.query(`
-  INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
-  ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`, [uid, now]);
-      
+      await pool.query(`
+        INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
+        ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`, [uid, now]);
+
       return inter.reply({ content: '🎁 + 5 koins !', ephemeral: true });
     } catch (e) { console.error(e); return inter.reply({ content:'❌ Erreur bonus', ephemeral:true }); }
   }
 
-  // -------- /dé --------
   if (inter.commandName === 'dé') {
-    const now = Date.now(), wait = 14_400_000; // 4h
+    const now = Date.now(), wait = 14_400_000;
     try {
       const { rows } = await pool.query('SELECT last_roll FROM rolls WHERE user_id=$1', [uid]);
       const last = rows[0]?.last_roll ?? 0;
@@ -108,27 +131,27 @@ await pool.query(`
         return inter.reply({ content:`⏳ Reviens dans ${m} min pour relancer le dé.`, ephemeral:true });
       }
 
-      const roll  = Math.floor(Math.random()*6)+1;
-      const gain  = roll * 2; // 2-4-6-8-10-12
-await pool.query(
-  `INSERT INTO koins(user_id, amount)
-   VALUES ($1, $2)
-   ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + $2`,
-  [uid, 5]
-);
+      const roll = Math.floor(Math.random()*6)+1;
+      const gain = roll * 2;
 
-await pool.query(
-  `INSERT INTO bonus(user_id, last_claim)
-   VALUES ($1, $2)
-   ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`,
-  [uid, now]
-);
+      await pool.query(
+        `INSERT INTO koins(user_id, amount)
+         VALUES ($1, $2)
+         ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + $2`,
+        [uid, gain]
+      );
+
+      await pool.query(
+        `INSERT INTO rolls(user_id, last_roll)
+         VALUES ($1, $2)
+         ON CONFLICT(user_id) DO UPDATE SET last_roll = $2`,
+        [uid, now]
+      );
 
       return inter.reply({ content:`🎲 ${roll} ! Tu gagnes **${gain} koins**.`, ephemeral:true });
     } catch(e){ console.error(e); return inter.reply({content:'❌ Erreur dé',ephemeral:true}); }
   }
 
-  // -------- /pioche --------
   if (inter.commandName === 'pioche') {
     const now = Date.now(), wait = 90*60*1000;
     try {
@@ -166,7 +189,6 @@ await pool.query(
     } catch(e){ console.error(e); return inter.editReply('❌ Erreur pioche'); }
   }
 
-  // -------- /booster --------
   if (inter.commandName === 'booster') {
     try {
       await inter.deferReply();
@@ -197,7 +219,6 @@ await pool.query(
     } catch(e){ console.error(e); return inter.editReply('❌ Erreur booster'); }
   }
 
-  // -------- /kollek --------
   if (inter.commandName === 'kollek'){
     try{
       await inter.deferReply();
@@ -226,7 +247,6 @@ await pool.query(
       }
 
       if (embeds.length===1) return inter.editReply({embeds});
-      // pagination
       const row=new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('prev').setLabel('◀️').setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId('next').setLabel('▶️').setStyle(ButtonStyle.Secondary)
@@ -242,7 +262,6 @@ await pool.query(
     }catch(e){ console.error(e); return inter.editReply('❌ Erreur kollek'); }
   }
 
-  // -------- /aide --------
   if (inter.commandName === 'aide') {
     const embed = {
       title:'📖 Aide Kollek',

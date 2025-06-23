@@ -110,11 +110,19 @@ await pool.query(`
 
       const roll  = Math.floor(Math.random()*6)+1;
       const gain  = roll * 2; // 2-4-6-8-10-12
-      await pool.query(`
-        INSERT INTO koins(user_id,amount) VALUES ($1,$2)
-        ON CONFLICT(user_id) DO UPDATE SET amount=koins.amount+$2;
-        INSERT INTO rolls(user_id,last_roll) VALUES ($1,$3)
-        ON CONFLICT(user_id) DO UPDATE SET last_roll=$3;`, [uid, gain, now]);
+await pool.query(
+  `INSERT INTO koins(user_id, amount)
+   VALUES ($1, $2)
+   ON CONFLICT(user_id) DO UPDATE SET amount = koins.amount + $2`,
+  [uid, 5]
+);
+
+await pool.query(
+  `INSERT INTO bonus(user_id, last_claim)
+   VALUES ($1, $2)
+   ON CONFLICT(user_id) DO UPDATE SET last_claim = $2`,
+  [uid, now]
+);
 
       return inter.reply({ content:`🎲 ${roll} ! Tu gagnes **${gain} koins**.`, ephemeral:true });
     } catch(e){ console.error(e); return inter.reply({content:'❌ Erreur dé',ephemeral:true}); }

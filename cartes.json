@@ -29,7 +29,7 @@
   { "id": 28, "name": "Nounou Bowling",       "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/bowling.png" },
   { "id": 29, "name": "Ninou D.Va",          "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/dva.png" },
   { "id": 30, "name": "Ninou Sims",          "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/sims.png" },
-  { "id": 31, "name": "Rourou",               "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/rourou.png" }
+  { "id": 31, "name": "Rourou",               "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/rourou.png" },
 
 
   { "id": 200, "name": "Nounou Top 1",       "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/top%201.png" },
@@ -55,7 +55,7 @@
   { "id": 220, "name": "Emerick Basketteur",   "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/emerickbasketteur.png" },
   { "id": 221, "name": "Nounou & Totoro",      "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/totoro.png" },
   { "id": 222, "name": "Mathieu Reinhardt",    "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/reinhardt.png" },
-  { "id": 223, "name": "Anna Ange",            "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/ange.png" }
+  { "id": 223, "name": "Anna Ange",            "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/ange.png" },
 
 
   { "id": 300, "name": "Nounou & Anna",        "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/anna.png" },

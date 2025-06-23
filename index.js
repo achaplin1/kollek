@@ -1,260 +1,253 @@
 // ────────────────────────── CONFIGURATION ──────────────────────────
 require('dotenv').config();
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } = require('discord.js');
-const { Pool } = require('pg');
+const {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} = require('discord.js');
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
+const { Pool } = require('pg');
+const path   = require('path');
+const fs     = require('fs');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3000;
 app.use('/cartes', express.static(path.join(__dirname, 'cartes')));
-app.listen(PORT, () => console.log(`✅ Express running on ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Express (static) sur ${PORT}`));
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool   = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const cartes = JSON.parse(fs.readFileSync('./cartes.json', 'utf8'));
 
-// ────────────────────────── COMMANDES ──────────────────────────
+// ────────────────────────── SLASH COMMANDS ──────────────────────────
 const commands = [
   new SlashCommandBuilder().setName('aide').setDescription("Affiche l'aide du jeu"),
-  new SlashCommandBuilder().setName('pioche').setDescription('Tire une carte toutes les 1h30'),
+  new SlashCommandBuilder().setName('pioche').setDescription('Tire une carte toutes les 1 h 30'),
   new SlashCommandBuilder().setName('kollek').setDescription('Affiche ta collection'),
-  new SlashCommandBuilder().setName('booster').setDescription('Ouvre un booster de 3 cartes')
-  new SlashCommandBuilder().setName('bonus').setDescription('Réclame ton bonus quotidien')
+  new SlashCommandBuilder().setName('booster').setDescription('Ouvre un booster de 3 cartes (10 koins)'),
+  new SlashCommandBuilder().setName('bonus').setDescription('Réclame 5 koins toutes les 24 h'),
+  new SlashCommandBuilder().setName('dé').setDescription('Lance un dé toutes les 4 h pour gagner des koins')
 ].map(c => c.toJSON());
 
-// ────────────────────────── RARETÉ ──────────────────────────
-const rarityChances = {
-  commune: 0.499,
-  rare: 0.32,
-  épique: 0.171,
-  légendaire: 0.01
-};
-const rarityColors = { commune: 0xA0A0A0, rare: 0x007BFF, épique: 0x9B59B6, légendaire: 0xFFD700 };
-const rarityKoins = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
-const rarityEmojis = { commune: '⚪', rare: '🔵', épique: '🟣', légendaire: '🟡' };
-const rarityReactions = {
-  commune: ['Pas ouf !', 'Encore elle...', 'Mouais.', 'Bof bof.'],
-  rare: ['Pas mal !', 'Stylé !', 'Bonne pioche !', 'Je la voulais.'],
-  épique: ['Wouah !', 'Trop classe !', 'Incroyable tirage !', 'Magnifique !'],
-  légendaire: ['LÉGENDAIRE !!!!', 'LA CARTE ULTIME !', 'C’est un MIRACLE !', 'Tu forces le destin !']
-};
-const boosterCost = 10;
+// ────────────────────────── CONSTANTES ──────────────────────────
+const rarityChances = { commune: 0.499, rare: 0.32, épique: 0.171, légendaire: 0.01 };
+const rarityColors  = { commune: 0xCCCCCC, rare: 0x3498db, épique: 0x9b59b6, légendaire: 0xf1c40f };
+const rarityEmojis  = { commune: '⚪',     rare: '🔵',     épique: '🟣',       légendaire: '🟡' };
+const rarityKoins   = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
+const boosterCost   = 10;
 
+// ────────────────────────── OUTILS ──────────────────────────
 function tirerRareté() {
   const r = Math.random();
   let acc = 0;
-  for (const [rarity, chance] of Object.entries(rarityChances)) {
-    acc += chance;
-    if (r <= acc) return rarity;
+  for (const [rar, p] of Object.entries(rarityChances)) {
+    acc += p;
+    if (r <= acc) return rar;
   }
   return 'commune';
 }
 
 // ────────────────────────── READY ──────────────────────────
 client.once('ready', async () => {
-  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
-  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+  console.log(`🤖 Connecté : ${client.user.tag}`);
+
+  const rest  = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   const appId = (await rest.get(Routes.oauth2CurrentApplication())).id;
   await rest.put(Routes.applicationCommands(appId), { body: commands });
-  console.log('✅ Commandes enregistrées');
+  console.log('✅ Slash commands enregistrées');
 
-  await pool.query(`CREATE TABLE IF NOT EXISTS pioches (user_id TEXT PRIMARY KEY, last_draw BIGINT);`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS collection(user_id TEXT, card_id INTEGER);`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS koins (user_id TEXT PRIMARY KEY, amount INTEGER DEFAULT 0);`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS bonus (user_id TEXT PRIMARY KEY, last_claim BIGINT);`);
+  // Tables
+  await pool.query(`CREATE TABLE IF NOT EXISTS pioches  (user_id TEXT PRIMARY KEY, last_draw  BIGINT);`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS bonus    (user_id TEXT PRIMARY KEY, last_claim BIGINT);`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS rolls    (user_id TEXT PRIMARY KEY, last_roll  BIGINT);`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS koins    (user_id TEXT PRIMARY KEY, amount     INT    DEFAULT 0);`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS collection(user_id TEXT, card_id INT);`);
 });
 
-client.on('interactionCreate', async inter => {
+// ────────────────────────── INTERACTIONS ──────────────────────────
+client.on('interactionCreate', async (inter) => {
   if (!inter.isChatInputCommand()) return;
   const uid = inter.user.id;
 
+  // -------- /bonus --------
   if (inter.commandName === 'bonus') {
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
+    const now = Date.now(), oneDay = 86_400_000;
     try {
-      const { rows } = await pool.query('SELECT last_claim FROM bonus WHERE user_id = $1', [uid]);
-      const last = rows[0]?.last_claim || 0;
+      const { rows } = await pool.query('SELECT last_claim FROM bonus WHERE user_id=$1', [uid]);
+      const last = rows[0]?.last_claim ?? 0;
       if (now - last < oneDay) {
-        const h = Math.ceil((oneDay - (now - last)) / 3600000);
-        return inter.reply({ content: `⏳ Reviens dans ${h}h pour réclamer ton prochain bonus.`, ephemeral: true });
+        const h = Math.ceil((oneDay - (now - last)) / 3_600_000);
+        return inter.reply({ content: `⏳ Reviens dans ${h} h pour ton bonus.`, ephemeral: true });
       }
-      const amount = 5;
-      await pool.query(`INSERT INTO koins(user_id, amount) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET amount = koins.amount + $2`, [uid, amount]);
-      await pool.query(`INSERT INTO bonus(user_id, last_claim) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_claim = EXCLUDED.last_claim`, [uid, now]);
-      return inter.reply({ content: `🎁 Tu as reçu **${amount} koins** de bonus quotidien !`, ephemeral: true });
-    } catch (err) {
-      console.error(err);
-      return inter.reply({ content: '❌ Une erreur est survenue.', ephemeral: true });
-    }
+
+      await pool.query(`
+        INSERT INTO koins(user_id,amount) VALUES ($1,5)
+        ON CONFLICT(user_id) DO UPDATE SET amount=koins.amount+5;
+        INSERT INTO bonus(user_id,last_claim) VALUES ($1,$2)
+        ON CONFLICT(user_id) DO UPDATE SET last_claim=$2;`, [uid, now]);
+      return inter.reply({ content: '🎁 + 5 koins !', ephemeral: true });
+    } catch (e) { console.error(e); return inter.reply({ content:'❌ Erreur bonus', ephemeral:true }); }
   }
 
+  // -------- /dé --------
+  if (inter.commandName === 'dé') {
+    const now = Date.now(), wait = 14_400_000; // 4h
+    try {
+      const { rows } = await pool.query('SELECT last_roll FROM rolls WHERE user_id=$1', [uid]);
+      const last = rows[0]?.last_roll ?? 0;
+      if (now - last < wait) {
+        const m = Math.ceil((wait - (now - last)) / 60000);
+        return inter.reply({ content:`⏳ Reviens dans ${m} min pour relancer le dé.`, ephemeral:true });
+      }
+
+      const roll  = Math.floor(Math.random()*6)+1;
+      const gain  = roll * 2; // 2-4-6-8-10-12
+      await pool.query(`
+        INSERT INTO koins(user_id,amount) VALUES ($1,$2)
+        ON CONFLICT(user_id) DO UPDATE SET amount=koins.amount+$2;
+        INSERT INTO rolls(user_id,last_roll) VALUES ($1,$3)
+        ON CONFLICT(user_id) DO UPDATE SET last_roll=$3;`, [uid, gain, now]);
+
+      return inter.reply({ content:`🎲 ${roll} ! Tu gagnes **${gain} koins**.`, ephemeral:true });
+    } catch(e){ console.error(e); return inter.reply({content:'❌ Erreur dé',ephemeral:true}); }
+  }
+
+  // -------- /pioche --------
   if (inter.commandName === 'pioche') {
-    const now = Date.now();
-    const waitTwoH = 90 * 60 * 1000;
+    const now = Date.now(), wait = 90*60*1000;
     try {
       await inter.deferReply();
-      const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id = $1', [uid]);
-      const lastDraw = rows[0]?.last_draw || 0;
-      if (now - lastDraw < waitTwoH) {
-        const m = Math.ceil((waitTwoH - (now - lastDraw)) / 60000);
+      const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id=$1', [uid]);
+      const last = rows[0]?.last_draw ?? 0;
+      if (now - last < wait) {
+        const m = Math.ceil((wait - (now - last)) / 60000);
         return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.`);
       }
 
+      const rar = tirerRareté();
+      const liste = cartes.filter(c => c.rarity === rar);
+      const carte = liste[Math.floor(Math.random()*liste.length)];
 
-      const rareté = tirerRareté();
-      const poolCartes = cartes.filter(c => c.rarity === rareté);
-      const carte = poolCartes[Math.floor(Math.random() * poolCartes.length)];
+      const dup = await pool.query('SELECT 1 FROM collection WHERE user_id=$1 AND card_id=$2', [uid, carte.id]);
+      let msg  = rarityReactions[rar][Math.floor(Math.random()*4)];
+      if (dup.rowCount){
+        const g = rarityKoins[rar];
+        msg += `\n💰 Carte en double ! +${g} koins`;
+        await pool.query(`INSERT INTO koins(user_id,amount) VALUES ($1,$2)
+                          ON CONFLICT(user_id) DO UPDATE SET amount=koins.amount+$2`, [uid, g]);
+      }
 
-      const { rows: owned } = await pool.query('SELECT 1 FROM collection WHERE user_id = $1 AND card_id = $2', [uid, carte.id]);
-      let bonusMsg = '';
-      if (owned.length) {
-  const gain = rarityKoins[rareté];
-  await pool.query(`INSERT INTO koins ...`);
-  const reaction = rarityReactions[rareté][Math.floor(Math.random() * 4)];
-  bonusMsg = `${reaction}\n💰 Carte en double ! Tu gagnes ${gain} koins.`;
-} else {
-  bonusMsg = rarityReactions[rareté][Math.floor(Math.random() * 4)];
-}
-
-
-      await pool.query('INSERT INTO collection(user_id, card_id) VALUES ($1, $2)', [uid, carte.id]);
-      await pool.query('INSERT INTO pioches(user_id, last_draw) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_draw = EXCLUDED.last_draw', [uid, now]);
+      await pool.query('INSERT INTO collection(user_id,card_id)VALUES($1,$2)',[uid,carte.id]);
+      await pool.query(`INSERT INTO pioches(user_id,last_draw) VALUES ($1,$2)
+                        ON CONFLICT(user_id) DO UPDATE SET last_draw=$2`,[uid,now]);
 
       const embed = {
-        title: `${rarityEmojis[carte.rarity]} ${carte.name}`,
-        description: `${bonusMsg}\nRareté : *${carte.rarity}*`,
-        color: rarityColors[carte.rarity] ?? 0xffffff
+        title: `${rarityEmojis[rar]} ${carte.name}`,
+        description: `${msg}\nRareté : *${rar}*`,
+        color: rarityColors[rar]
       };
-      await inter.editReply({ embeds: [embed], files: [carte.image] });
-    } catch (err) {
-      console.error(err);
-      await inter.editReply('❌ Une erreur est survenue.');
-    }
+      return inter.editReply({ embeds:[embed], files:[carte.image] });
+    } catch(e){ console.error(e); return inter.editReply('❌ Erreur pioche'); }
   }
 
-  if (inter.commandName === 'kollek') {
-    try {
-      await inter.deferReply();
-      const { rows: collectionRows } = await pool.query('SELECT card_id FROM collection WHERE user_id = $1', [uid]);
-      if (!collectionRows.length) return inter.editReply('😢 Tu ne possèdes encore aucune carte.');
-
-      const { rows: koinsRows } = await pool.query('SELECT amount FROM koins WHERE user_id = $1', [uid]);
-      const koins = koinsRows[0]?.amount || 0;
-
-      const countMap = {};
-      collectionRows.forEach(r => countMap[r.card_id] = (countMap[r.card_id] || 0) + 1);
-      const lignes = Object.entries(countMap).map(([id, count]) => {
-        const carte = cartes.find(c => c.id == id);
-        return `• **${carte.name}** × ${count} (*${carte.rarity}*)`;
-      });
-
-      const total = collectionRows.length;
-      const uniques = Object.keys(countMap).length;
-
-      const pages = [];
-      for (let i = 0; i < lignes.length; i += 10) {
-        const desc = lignes.slice(i, i + 10).join('\n') + `\n\n📊 Tu possèdes ${total} cartes dont ${uniques} différentes.\n💰 Koins : ${koins}`;
-        pages.push({
-          title: `📘 Collection de ${inter.user.username} (page ${Math.floor(i/10)+1}/${Math.ceil(lignes.length/10)})`,
-          description: desc,
-          color: 0x3498db
-        });
-      }
-
-      let page = 0;
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('prev').setLabel('◀️').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('next').setLabel('▶️').setStyle(ButtonStyle.Secondary)
-      );
-
-      const msg = await inter.editReply({ embeds: [pages[page]], components: lignes.length > 10 ? [row] : [] });
-
-      const collector = msg.createMessageComponentCollector({ time: 60000 });
-      collector.on('collect', async i => {
-        if (i.user.id !== uid) return i.reply({ content: "Pas ton menu !", ephemeral: true });
-        if (i.customId === 'next') page = (page + 1) % pages.length;
-        if (i.customId === 'prev') page = (page - 1 + pages.length) % pages.length;
-        await i.update({ embeds: [pages[page]] });
-      });
-
-    } catch (err) {
-      console.error(err);
-      await inter.editReply("❌ Impossible d'afficher la collection.");
-    }
-  }
-
-  if (inter.commandName === 'aide') {
-  const embed = {
-    title: '📖 Aide du jeu de cartes Kollek',
-    description: `Bienvenue dans **Kollek**, le jeu de collection de cartes unique avec Nounou !\nVoici tout ce que tu dois savoir 👇`,
-    fields: [
-      {
-        name: '🎴 /pioche',
-        value: `Tire **1 carte toutes les 90 minutes**.\nSi c’est un doublon, tu gagnes des **koins** selon sa rareté.`
-      },
-      {
-        name: '📦 /booster',
-        value: `Ouvre un booster de **3 cartes** pour **10 koins**.`
-      },
-      {
-        name: '📘 /kollek',
-        value: `Affiche ta **collection** de cartes.\nTu vois aussi ton total de cartes et de koins.`
-      },
-      {
-        name: '⭐ Les raretés',
-        value: `• ⚪ Commune : 50%\n• 🔵 Rare : 32%\n• 🟣 Épique : 17%\n• 🟡 Légendaire : 1%`
-      },
-      {
-        name: '💰 Les koins',
-        value: `Tu gagnes des koins en tirant des **doublons** !\n• Commune : +1\n• Rare : +3\n• Épique : +7\n• Légendaire : +20`
-      },
-      {
-        name: '❓ Autres infos',
-        value: `De nouvelles cartes sont ajoutées régulièrement.\nPrépare ta meilleure collection !`
-      }
-    ],
-    color: 0x2ecc71
-  };
-  return inter.reply({ embeds: [embed], ephemeral: true });
-}
-
+  // -------- /booster --------
   if (inter.commandName === 'booster') {
     try {
       await inter.deferReply();
-      const { rows } = await pool.query('SELECT amount FROM koins WHERE user_id = $1', [uid]);
-      const currentKoins = rows[0]?.amount || 0;
+      const { rows } = await pool.query('SELECT amount FROM koins WHERE user_id=$1', [uid]);
+      const solde = rows[0]?.amount ?? 0;
+      if (solde < boosterCost)
+        return inter.editReply(`💸 Il faut ${boosterCost} koins (tu en as ${solde}).`);
 
-      if (currentKoins < boosterCost) {
-        return inter.editReply(`💸 Il te faut ${boosterCost} koins pour ouvrir un booster. Tu en as ${currentKoins}.`);
+      await pool.query('UPDATE koins SET amount=amount-$2 WHERE user_id=$1', [uid, boosterCost]);
+
+      const tirages = [];
+      for (let i=0;i<3;i++){
+        const rar = tirerRareté();
+        const carte = cartes.filter(c=>c.rarity===rar)[Math.floor(Math.random()*cartes.length)];
+        tirages.push(carte);
+        await pool.query('INSERT INTO collection(user_id,card_id)VALUES($1,$2)',[uid,carte.id]);
       }
 
-      await pool.query('UPDATE koins SET amount = amount - $2 WHERE user_id = $1', [uid, boosterCost]);
-      await inter.editReply(`📦 Tu ouvres un booster...`);
-
-      for (let i = 0; i < 3; i++) {
-        await new Promise(r => setTimeout(r, 1000));
-        const rareté = tirerRareté();
-        const poolCartes = cartes.filter(c => c.rarity === rareté);
-        const carte = poolCartes[Math.floor(Math.random() * poolCartes.length)];
-
-        await pool.query('INSERT INTO collection(user_id, card_id) VALUES ($1,$2)', [uid, carte.id]);
-
-        const reaction = rarityReactions[rareté][Math.floor(Math.random() * 4)];
+      await inter.editReply('📦 Booster ouvert !');
+      for (const c of tirages){
         const embed = {
-          title: `${rarityEmojis[carte.rarity]} Carte ${i + 1}`,
-          description: `**${carte.name}**\n${reaction}\nRareté : *${carte.rarity}*`,
-          color: rarityColors[carte.rarity] ?? 0xffffff
+          title:`${rarityEmojis[c.rarity]} ${c.name}`,
+          color:rarityColors[c.rarity],
+          description:`Rareté : *${c.rarity}*`
         };
-
-        await inter.followUp({ embeds: [embed], files: [carte.image] });
+        await inter.followUp({ embeds:[embed], files:[c.image] });
       }
-    } catch (err) {
-      console.error(err);
-      await inter.editReply("❌ Une erreur est survenue pendant l'ouverture du booster.");
-    }
+    } catch(e){ console.error(e); return inter.editReply('❌ Erreur booster'); }
+  }
+
+  // -------- /kollek --------
+  if (inter.commandName === 'kollek'){
+    try{
+      await inter.deferReply();
+      const col = await pool.query('SELECT card_id FROM collection WHERE user_id=$1', [uid]);
+      if (!col.rowCount) return inter.editReply('😢 Aucune carte.');
+
+      const ko = await pool.query('SELECT amount FROM koins WHERE user_id=$1',[uid]);
+      const solde = ko.rows[0]?.amount ?? 0;
+
+      const map = {};
+      col.rows.forEach(r => map[r.card_id] = (map[r.card_id]||0)+1);
+
+      const lignes = Object.entries(map).map(([id,n])=>{
+        const c=cartes.find(x=>x.id==id);
+        return `• **${c.name}** × ${n} (*${c.rarity}*)`;
+      });
+
+      const embeds=[];
+      for(let i=0;i<lignes.length;i+=10){
+        embeds.push({
+          title:`📘 Collection de ${inter.user.username} (${Math.floor(i/10)+1}/${Math.ceil(lignes.length/10)})`,
+          description:lignes.slice(i,i+10).join('\n')+
+            `\n\nTotal : ${col.rowCount} cartes\n💰 Koins : ${solde}`,
+          color:0x3498db
+        });
+      }
+
+      if (embeds.length===1) return inter.editReply({embeds});
+      // pagination
+      const row=new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('prev').setLabel('◀️').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('next').setLabel('▶️').setStyle(ButtonStyle.Secondary)
+      );
+      let page=0;
+      const msg=await inter.editReply({embeds:[embeds[0]], components:[row]});
+      const collector=msg.createMessageComponentCollector({time:60_000});
+      collector.on('collect',async i=>{
+        if(i.user.id!==uid) return i.reply({ content:'Pas ton menu !',ephemeral:true});
+        page = i.customId==='next' ? (page+1)%embeds.length : (page-1+embeds.length)%embeds.length;
+        await i.update({ embeds:[embeds[page]]});
+      });
+    }catch(e){ console.error(e); return inter.editReply('❌ Erreur kollek'); }
+  }
+
+  // -------- /aide --------
+  if (inter.commandName === 'aide') {
+    const embed = {
+      title:'📖 Aide Kollek',
+      description:'Commandes disponibles',
+      fields:[
+        {name:'/pioche',  value:'Tirer 1 carte (90 min de CD)'},
+        {name:'/booster', value:'Booster de 3 cartes pour 10 koins'},
+        {name:'/kollek',  value:'Voir ta collection'},
+        {name:'/bonus',   value:'+5 koins / 24 h'},
+        {name:'/dé',      value:'Dé 6 faces – gain (face×2) / 4 h'}
+      ],
+      color:0x2ecc71
+    };
+    return inter.reply({ embeds:[embed], ephemeral:true });
   }
 });
 
+// ────────────────────────── LOGIN ──────────────────────────
 client.login(process.env.DISCORD_TOKEN);

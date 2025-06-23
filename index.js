@@ -42,10 +42,10 @@ const rarityKoins   = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
 const boosterCost   = 10;
 const rarityReactions = {
   commune: [
-    "Une carte toute simple !",
-    "Rien d’extra, mais c’est toujours ça.",
-    "Une carte banale.",
-    "Commune… comme ton humour 😏"
+    "Une carte toute simple",
+    "Rien d’extra, mais c’est toujours ça",
+    "Basique",
+    "Bof"
   ],
   rare: [
     "Pas mal, une rare !",
@@ -60,10 +60,7 @@ const rarityReactions = {
     "On touche au légendaire… presque."
   ],
   légendaire: [
-    "🌟 LÉGENDAIRE !!",
-    "Tu viens de choper une pépite !",
-    "Incroyable tirage !",
-    "Celle-là va faire des jaloux."
+    "🌟 LÉGENDAIRE !!"
   ]
 };
 

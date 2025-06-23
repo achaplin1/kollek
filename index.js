@@ -17,7 +17,7 @@ const cartes = JSON.parse(fs.readFileSync('./cartes.json', 'utf8'));
 
 // ────────────────────────── COMMANDES ──────────────────────────
 const commands = [
-  new SlashCommandBuilder().setName('pioche').setDescription('Tire une carte toutes les 2 h'),
+  new SlashCommandBuilder().setName('pioche').setDescription('Tire une carte toutes les 1h30'),
   new SlashCommandBuilder().setName('kollek').setDescription('Affiche ta collection'),
   new SlashCommandBuilder().setName('booster').setDescription('Ouvre un booster de 3 cartes')
 ].map(c => c.toJSON());
@@ -66,7 +66,7 @@ client.on('interactionCreate', async inter => {
 
   if (inter.commandName === 'pioche') {
     const now = Date.now();
-    const waitTwoH = 2 * 60 * 60 * 1000;
+    const waitTwoH = 90 * 60 * 1000;
     try {
       await inter.deferReply();
       const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id = $1', [uid]);

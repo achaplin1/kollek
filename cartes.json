@@ -1,5 +1,4 @@
 [
-  /* ───── COMMUNES (1-25) ───── */
   { "id": 1,  "name": "Nounou Skater",      "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/skater.png" },
   { "id": 2,  "name": "Nounou Pilote",      "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/pilote.png" },
   { "id": 3,  "name": "En Famille",  "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/en%20famille.png" },
@@ -26,7 +25,6 @@
   { "id": 24, "name": "Nounou Footballeur", "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/footballeur.png" },
   { "id": 25, "name": "Nounou Mécano",      "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/mécano.png" },
 
-  /* ───── RARES (200-217) ───── */
   { "id": 200, "name": "Nounou Top 1",       "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/top%201.png" },
   { "id": 201, "name": "Nounou & Emerick",     "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/emerick.png" },
   { "id": 202, "name": "Nounou & les Chats",       "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/chats.png" },
@@ -46,7 +44,6 @@
   { "id": 216, "name": "Nounou Danseur",     "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/danseur.png" },
   { "id": 217, "name": "Nounou Crêpier",     "rarity": "rare", "image": "https://kollek-production.up.railway.app/cartes/crêpier.png" },
 
-  /* ───── ÉPIQUES (300-308) ───── */
   { "id": 300, "name": "Nounou & Anna",        "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/anna.png" },
   { "id": 301, "name": "Nounou Au Bureau",   "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/au%20bureau.png" },
   { "id": 302, "name": "Nounou Barjo",       "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/barjo.png" },
@@ -57,7 +54,6 @@
   { "id": 307, "name": "Nounou & Ninou",       "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/ninou.png" },
   { "id": 308, "name": "Nounou Titan",       "rarity": "épique", "image": "https://kollek-production.up.railway.app/cartes/titan.png" },
 
-  /* ───── LÉGENDAIRES (400-403) ───── */
   { "id": 400, "name": "Nounou Chanteur", "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/chanteur.png" },
   { "id": 401, "name": "Juno",     "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/juno.png" },
   { "id": 402, "name": "Super Nunu",     "rarity": "légendaire", "image": "https://kollek-production.up.railway.app/cartes/nunu.png" },

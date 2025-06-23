@@ -202,7 +202,8 @@ client.on('interactionCreate', async (inter) => {
       const tirages = [];
       for (let i=0;i<3;i++){
         const rar = tirerRareté();
-        const carte = cartes.filter(c=>c.rarity===rar)[Math.floor(Math.random()*cartes.length)];
+        const liste = cartes.filter(c => c.rarity === rar);
+        const carte = liste[Math.floor(Math.random() * liste.length)];
         tirages.push(carte);
         await pool.query('INSERT INTO collection(user_id,card_id)VALUES($1,$2)',[uid,carte.id]);
       }

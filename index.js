@@ -17,6 +17,7 @@ const cartes = JSON.parse(fs.readFileSync('./cartes.json', 'utf8'));
 
 // ────────────────────────── COMMANDES ──────────────────────────
 const commands = [
+  new SlashCommandBuilder().setName('aide').setDescription("Affiche l'aide du jeu"),
   new SlashCommandBuilder().setName('pioche').setDescription('Tire une carte toutes les 1h30'),
   new SlashCommandBuilder().setName('kollek').setDescription('Affiche ta collection'),
   new SlashCommandBuilder().setName('booster').setDescription('Ouvre un booster de 3 cartes')
@@ -162,6 +163,41 @@ client.on('interactionCreate', async inter => {
       await inter.editReply("❌ Impossible d'afficher la collection.");
     }
   }
+
+  if (inter.commandName === 'aide') {
+  const embed = {
+    title: '📖 Aide du jeu de cartes Kollek',
+    description: `Bienvenue dans **Kollek**, le jeu de collection de cartes unique avec Nounou !\nVoici tout ce que tu dois savoir 👇`,
+    fields: [
+      {
+        name: '🎴 /pioche',
+        value: `Tire **1 carte toutes les 90 minutes**.\nSi c’est un doublon, tu gagnes des **koins** selon sa rareté.`
+      },
+      {
+        name: '📦 /booster',
+        value: `Ouvre un booster de **3 cartes** pour **25 koins**.\nLes cartes s’ouvrent une par une avec suspense !`
+      },
+      {
+        name: '📘 /kollek',
+        value: `Affiche ta **collection** de cartes, paginée si nécessaire.\nTu vois aussi ton total de cartes et de koins.`
+      },
+      {
+        name: '⭐ Les raretés',
+        value: `• ⚪ Commune : 47.6%\n• 🔵 Rare : 34.2%\n• 🟣 Épique : 17.1%\n• 🟡 Légendaire : 1%`
+      },
+      {
+        name: '💰 Les koins',
+        value: `Tu gagnes des koins en tirant des **doublons** !\n• Commune : +1\n• Rare : +3\n• Épique : +7\n• Légendaire : +20`
+      },
+      {
+        name: '❓ Autres infos',
+        value: `De nouvelles cartes sont ajoutées régulièrement.\nPrépare ta meilleure collection !`
+      }
+    ],
+    color: 0x2ecc71
+  };
+  return inter.reply({ embeds: [embed], ephemeral: true });
+}
 
   if (inter.commandName === 'booster') {
     try {

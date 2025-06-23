@@ -21,6 +21,7 @@ const commands = [
   new SlashCommandBuilder().setName('pioche').setDescription('Tire une carte toutes les 1h30'),
   new SlashCommandBuilder().setName('kollek').setDescription('Affiche ta collection'),
   new SlashCommandBuilder().setName('booster').setDescription('Ouvre un booster de 3 cartes')
+  new SlashCommandBuilder().setName('bonus').setDescription('Réclame ton bonus quotidien')
 ].map(c => c.toJSON());
 
 // ────────────────────────── RARETÉ ──────────────────────────

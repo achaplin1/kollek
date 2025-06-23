@@ -23,7 +23,12 @@ const commands = [
 ].map(c => c.toJSON());
 
 // ────────────────────────── RARETÉ ──────────────────────────
-const rarityChances = { commune: 0.45, rare: 0.35, épique: 0.19, légendaire: 0.01 };
+const rarityChances = {
+  commune: 0.476,
+  rare: 0.342,
+  épique: 0.171,
+  légendaire: 0.010
+};
 const rarityColors = { commune: 0xA0A0A0, rare: 0x007BFF, épique: 0x9B59B6, légendaire: 0xFFD700 };
 const rarityKoins = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
 const rarityEmojis = { commune: '⚪', rare: '🔵', épique: '🟣', légendaire: '🟡' };

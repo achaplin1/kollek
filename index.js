@@ -64,7 +64,6 @@ client.once('ready', async () => {
   await pool.query(`CREATE TABLE IF NOT EXISTS koins (user_id TEXT PRIMARY KEY, amount INTEGER DEFAULT 0);`);
 });
 
-// ────────────────────────── INTERACTIONS ──────────────────────────
 client.on('interactionCreate', async inter => {
   if (!inter.isChatInputCommand()) return;
   const uid = inter.user.id;
@@ -82,16 +81,12 @@ client.on('interactionCreate', async inter => {
       const amount = 5;
       await pool.query(`INSERT INTO koins(user_id, amount) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET amount = koins.amount + $2`, [uid, amount]);
       await pool.query(`INSERT INTO bonus(user_id, last_claim) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_claim = EXCLUDED.last_claim`, [uid, now]);
-      await inter.reply({ content: `🎁 Tu as reçu **${amount} koins** de bonus quotidien !`, ephemeral: true });
+      return inter.reply({ content: `🎁 Tu as reçu **${amount} koins** de bonus quotidien !`, ephemeral: true });
     } catch (err) {
       console.error(err);
-      await inter.reply({ content: '❌ Une erreur est survenue.', ephemeral: true });
+      return inter.reply({ content: '❌ Une erreur est survenue.', ephemeral: true });
     }
   }
-  
-client.on('interactionCreate', async inter => {
-  if (!inter.isChatInputCommand()) return;
-  const uid = inter.user.id;
 
   if (inter.commandName === 'pioche') {
     const now = Date.now();
@@ -100,10 +95,10 @@ client.on('interactionCreate', async inter => {
       await inter.deferReply();
       const { rows } = await pool.query('SELECT last_draw FROM pioches WHERE user_id = $1', [uid]);
       const lastDraw = rows[0]?.last_draw || 0;
-if (now - lastDraw < waitTwoH) {
-  const m = Math.ceil((waitTwoH - (now - lastDraw)) / 60000);
-  return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.`);
-}
+      if (now - lastDraw < waitTwoH) {
+        const m = Math.ceil((waitTwoH - (now - lastDraw)) / 60000);
+        return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.`);
+      }
 
 
       const rareté = tirerRareté();

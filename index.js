@@ -25,10 +25,10 @@ const commands = [
 
 // ────────────────────────── RARETÉ ──────────────────────────
 const rarityChances = {
-  commune: 0.476,
-  rare: 0.342,
+  commune: 0.499,
+  rare: 0.32,
   épique: 0.171,
-  légendaire: 0.010
+  légendaire: 0.01
 };
 const rarityColors = { commune: 0xA0A0A0, rare: 0x007BFF, épique: 0x9B59B6, légendaire: 0xFFD700 };
 const rarityKoins = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
@@ -175,15 +175,15 @@ client.on('interactionCreate', async inter => {
       },
       {
         name: '📦 /booster',
-        value: `Ouvre un booster de **3 cartes** pour **25 koins**.\nLes cartes s’ouvrent une par une avec suspense !`
+        value: `Ouvre un booster de **3 cartes** pour **25 koins**.`
       },
       {
         name: '📘 /kollek',
-        value: `Affiche ta **collection** de cartes, paginée si nécessaire.\nTu vois aussi ton total de cartes et de koins.`
+        value: `Affiche ta **collection** de cartes.\nTu vois aussi ton total de cartes et de koins.`
       },
       {
         name: '⭐ Les raretés',
-        value: `• ⚪ Commune : 47.6%\n• 🔵 Rare : 34.2%\n• 🟣 Épique : 17.1%\n• 🟡 Légendaire : 1%`
+        value: `• ⚪ Commune : 50%\n• 🔵 Rare : 32%\n• 🟣 Épique : 17%\n• 🟡 Légendaire : 1%`
       },
       {
         name: '💰 Les koins',

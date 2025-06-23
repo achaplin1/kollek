@@ -157,7 +157,8 @@ client.on('interactionCreate', async (inter) => {
       const last = rows[0]?.last_draw ?? 0;
       if (now - last < wait) {
         const m = Math.ceil((wait - (now - last)) / 60000);
-        return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.`);
+        return inter.editReply(`⏳ Attends encore ${m} min pour repiocher.\n💡 N'oublie pas : /bonus chaque jour et /dé toutes les 4h !
+`);
       }
 
       const rar = tirerRareté();
@@ -194,7 +195,7 @@ if (inter.commandName === 'booster') {
     const { rows } = await pool.query('SELECT amount FROM koins WHERE user_id=$1', [uid]);
     const solde = rows[0]?.amount ?? 0;
     if (solde < boosterCost)
-      return inter.editReply(`💸 Il faut ${boosterCost} koins (tu en as ${solde}).`);
+      return inter.editReply(`💸 Il faut ${boosterCost} koins (tu en as ${solde}).\n💡 Tu peux faire /bonus chaque jour et /dé toutes les 4h pour en gagner !`);
 
     await pool.query('UPDATE koins SET amount=amount-$2 WHERE user_id=$1', [uid, boosterCost]);
 

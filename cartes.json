@@ -22,7 +22,7 @@
   { "id": 21, "name": "Nounou Frimeur",     "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/frimeur.png" },
   { "id": 22, "name": "Nounou Jardinier",   "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/jardinier.png" },
   { "id": 23, "name": "Nounou Pompier",     "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/pompier.png" },
-  { "id": 24, "name": "Nounou Footballeur", "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/footballeur.png" },
+  { "id": 24, "name": "Nounou Footballeur", "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/footballer.png" },
   { "id": 25, "name": "Nounou Mécano",      "rarity": "commune",   "image": "https://kollek-production.up.railway.app/cartes/mécano.png" },
   { "id": 26, "name": "Nounou Zombie",        "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/zombie.png" },
   { "id": 27, "name": "Nounou & Kaonashi",    "rarity": "commune", "image": "https://kollek-production.up.railway.app/cartes/kaonashi.png" },

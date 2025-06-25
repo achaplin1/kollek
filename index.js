@@ -45,7 +45,7 @@ const rarityChances = { commune: 0.499, rare: 0.32, épique: 0.171, légendaire:
 const rarityColors  = { commune: 0xCCCCCC, rare: 0x3498db, épique: 0x9b59b6, légendaire: 0xf1c40f };
 const rarityEmojis  = { commune: '⚪',     rare: '🔵',     épique: '🟣',       légendaire: '🟡' };
 const rarityKoins   = { commune: 1, rare: 3, épique: 7, légendaire: 20 };
-const boosterCost   = 10;
+const boosterCost   = 20;
 const rarityReactions = {
   commune: [
     "Une carte toute simple",

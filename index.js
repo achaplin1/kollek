@@ -100,6 +100,12 @@ client.once('ready', async () => {
 // ────────────────────────── INTERACTIONS ──────────────────────────
 client.on('interactionCreate', async (inter) => {
   if (!inter.isChatInputCommand()) return;
+  
+  const salonAutorisé = '1386522327122055259';
+if (inter.channelId !== salonAutorisé) {
+  return inter.reply({ content: '❌ Tu ne peux utiliser ce bot que dans le salon autorisé.', ephemeral: true });
+}
+
   const uid = inter.user.id;
 
  if (inter.commandName === 'bonus') {

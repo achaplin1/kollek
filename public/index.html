@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qui de Nous ?</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="confetti-container" id="confetti"></div>
+    <main class="app">
+      <header class="hero">
+        <h1>Qui de Nous ?</h1>
+        <p class="subtitle">Créez un salon et votez entre amis en temps réel ✨</p>
+      </header>
+
+      <section class="panels" id="auth-panels">
+        <div class="panel">
+          <h2>Créer un salon</h2>
+          <form id="create-room-form" class="stack">
+            <label class="field">
+              <span>Nom affiché</span>
+              <input type="text" id="admin-name" required placeholder="Ton prénom" />
+            </label>
+            <label class="field">
+              <span>Mot de passe admin</span>
+              <input type="password" id="admin-password" required placeholder="Mot de passe secret" />
+            </label>
+            <button type="submit" class="primary">Créer</button>
+            <p class="hint">
+              Conseil: partage le lien du salon à tes amis une fois créé.
+            </p>
+          </form>
+        </div>
+        <div class="panel">
+          <h2>Rejoindre un salon</h2>
+          <form id="join-room-form" class="stack">
+            <label class="field">
+              <span>Code du salon</span>
+              <input type="text" id="join-room-id" required placeholder="Ex: ABC123" />
+            </label>
+            <label class="field">
+              <span>Ton nom</span>
+              <input type="text" id="player-name" required placeholder="Ton prénom" />
+            </label>
+            <button type="submit" class="secondary">Rejoindre</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="admin-area" class="hidden">
+        <div class="toolbar">
+          <div>
+            <h2>Salon <span id="room-id"></span></h2>
+            <p id="share-link"></p>
+          </div>
+          <button id="copy-link" class="ghost">Copier le lien</button>
+        </div>
+
+        <div class="grid-layout">
+          <div class="card">
+            <h3>Participants</h3>
+            <ul id="player-list" class="list"></ul>
+          </div>
+
+          <div class="card">
+            <h3>Têtes disponibles</h3>
+            <form id="head-form" class="stack inline">
+              <input type="text" id="head-name" placeholder="Nom" required />
+              <input type="url" id="head-image" placeholder="URL de l'image" required />
+              <button type="submit" class="ghost">Ajouter</button>
+            </form>
+            <div id="heads"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Lancer une manche</h3>
+          <form id="round-form" class="stack">
+            <label class="field">
+              <span>Question</span>
+              <input type="text" id="round-question" placeholder="Qui est le plus..." required />
+            </label>
+            <p class="hint">Sélectionne les têtes qui participeront à cette manche.</p>
+            <div id="head-selection" class="head-grid"></div>
+            <button type="submit" class="primary">Lancer la manche</button>
+          </form>
+          <button id="end-round" class="ghost">Terminer la manche</button>
+        </div>
+      </section>
+
+      <section id="player-area" class="hidden">
+        <div class="card">
+          <h2 id="player-question">En attente de la première manche...</h2>
+          <div id="player-heads" class="head-grid"></div>
+          <p id="vote-status" class="hint"></p>
+        </div>
+        <div id="results" class="hidden card"></div>
+      </section>
+    </main>
+
+    <template id="head-card-template">
+      <div class="head-card">
+        <img class="head-image" alt="" />
+        <div class="head-name"></div>
+      </div>
+    </template>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="utils.js" type="module"></script>
+  </body>
+</html>

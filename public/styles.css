@@ -442,7 +442,7 @@ body.dark-mode .toast {
 
 .hero h1 {
   margin: 6px 0 4px;
-  font-size: clamp(40px, 6.4vw, 70px);
+  font-size: clamp(40px, 6.4vw, 40px);
   color: var(--ink-dark);
   text-shadow: 0 8px 0 rgba(193, 139, 255, 0.22);
 }
